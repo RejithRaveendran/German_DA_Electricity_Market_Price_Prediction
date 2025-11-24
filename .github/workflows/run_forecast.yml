@@ -1,45 +1,39 @@
 
-name: Run Electricity Forecast and Push Results
+name: Run Electricity Forecast and Push Entire Project
 
 on:
   schedule:
-    # Runs every hour
     - cron: "0 * * * *"
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Run the forecast script
       - name: Run electricity forecast
         run: |
           python electricity_forecast_powerbi.py
 
-      # Commit and push updated artifacts folder
-      - name: Commit and push artifacts
+      - name: Commit and push all changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add artifacts/*
-          git commit -m "Update forecast and accuracy CSV" || echo "No changes to commit"
+          git add .
+          git commit -m "Auto-update: $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
