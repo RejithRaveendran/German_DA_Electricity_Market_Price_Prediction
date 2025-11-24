@@ -1,5 +1,5 @@
 
-name: Run Electricity Forecast
+name: Run Electricity Forecast and Push Results
 
 on:
   schedule:
@@ -32,3 +32,14 @@ jobs:
       - name: Run electricity forecast
         run: |
           python electricity_forecast_powerbi.py
+
+      # Commit and push updated artifacts folder
+      - name: Commit and push artifacts
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add artifacts/*
+          git commit -m "Update forecast and accuracy CSV" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
