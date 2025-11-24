@@ -3,9 +3,9 @@
 # -*- coding: utf-8 -*-
 """
 Day-Ahead Electricity Price Prediction for German Market (DE-LU)
-Generates two fixed CSV files for Power BI:
-1. forecast.csv (tomorrow's forecast)
-2. accuracy.csv (previous day's actual vs predicted)
+Generates two fixed CSV files in the GitHub project folder:
+1. artifacts/forecast.csv (tomorrow's forecast)
+2. artifacts/accuracy.csv (previous day's actual vs predicted)
 """
 
 import subprocess
@@ -26,7 +26,6 @@ for pkg in required_packages:
 # -------------------------- Imports --------------------------
 import pandas as pd
 import numpy as np
-import requests
 from datetime import date
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -40,9 +39,9 @@ ZONE_CODE_ENTSOE = "DE_LU"
 TZ_LOCAL = "Europe/Berlin"
 TZ_ENTSOE = "Europe/Brussels"
 
-FEATURE_STORE_DIR = "./feature_store"; os.makedirs(FEATURE_STORE_DIR, exist_ok=True)
-MODEL_DIR = "./models"; os.makedirs(MODEL_DIR, exist_ok=True)
-ARTIFACTS_DIR = "./artifacts"; os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+FEATURE_STORE_DIR = "feature_store"; os.makedirs(FEATURE_STORE_DIR, exist_ok=True)
+MODEL_DIR = "models"; os.makedirs(MODEL_DIR, exist_ok=True)
+ARTIFACTS_DIR = "artifacts"; os.makedirs(ARTIFACTS_DIR, exist_ok=True)
 
 TRAIN_START = pd.Timestamp("2024-10-01", tz=TZ_LOCAL)
 TRAIN_END = pd.Timestamp.today(tz=TZ_LOCAL) - pd.Timedelta(days=5)
@@ -232,13 +231,13 @@ def prev_day_actual_vs_pred(prev_local_date):
     print(f"✅ Prev-day metrics → MAE: {mae:.3f} EUR/MWh | RMSE: {rmse:.3f} EUR/MWh | Coverage: {coverage:.2f}%")
     return comp
 
-# -------------------------- Generate fixed CSVs --------------------------
+# -------------------------- Save outputs to GitHub project folder --------------------------
 forecast_tomorrow_df = forecast_for_day(TOMORROW_LOCAL)
-csv_forecast_path = f"{ARTIFACTS_DIR}/forecast.csv"
+csv_forecast_path = os.path.join(ARTIFACTS_DIR, "forecast.csv")
 forecast_tomorrow_df.to_csv(csv_forecast_path)
-print(f"✅ Saved forecast CSV: {csv_forecast_path}")
+print(f"✅ Saved forecast CSV to {csv_forecast_path}")
 
 prev_comp_df = prev_day_actual_vs_pred(PREV_LOCAL_DATE)
-csv_accuracy_path = f"{ARTIFACTS_DIR}/accuracy.csv"
+csv_accuracy_path = os.path.join(ARTIFACTS_DIR, "accuracy.csv")
 prev_comp_df.to_csv(csv_accuracy_path)
-print(f"✅ Saved accuracy CSV: {csv_accuracy_path}")
+print(f"✅ Saved accuracy CSV to {csv_accuracy_path}")
