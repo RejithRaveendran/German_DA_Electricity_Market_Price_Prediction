@@ -241,3 +241,55 @@ prev_comp_df = prev_day_actual_vs_pred(PREV_LOCAL_DATE)
 csv_accuracy_path = os.path.join(ARTIFACTS_DIR, "accuracy.csv")
 prev_comp_df.to_csv(csv_accuracy_path)
 print(f"✅ Saved accuracy CSV to {csv_accuracy_path}")
+
+# --- ADD THIS BLOCK NEAR THE END, right after saving the CSVs ---
+
+import hashlib
+import json
+
+def file_sha256(path: str) -> str:
+    """Return SHA-256 hash (hex) of the file bytes."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def write_hash_meta(csv_path: str, update_on_change_only: bool = True) -> None:
+    """
+    Create/update a metadata JSON next to the CSV that records its SHA-256.
+    If update_on_change_only=True, we only rewrite the meta file when the hash changed,
+    avoiding commits for identical content.
+    """
+    sha_now = file_sha256(csv_path)
+    meta_path = csv_path + ".meta.json"
+
+    prev_sha = None
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                prev = json.load(f)
+                prev_sha = prev.get("sha256")
+        except Exception:
+            # If previous meta is unreadable, proceed to write a fresh one.
+            pass
+
+    if update_on_change_only and prev_sha == sha_now:
+        print(f"⛔ No CSV content change detected for {csv_path} (sha256={sha_now}). Meta not updated.")
+        return
+
+    meta = {
+        "file": os.path.basename(csv_path),
+        "sha256": sha_now,
+        "generated_at": pd.Timestamp.now(tz=TZ_LOCAL).isoformat(),
+        "previous_sha256": prev_sha,
+    }
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ Wrote/updated hash metadata: {meta_path} (sha256={sha_now})")
+
+# After saving the two CSVs:
+write_hash_meta(csv_forecast_path)  # artifacts/forecast.csv.meta.json
+write_hash_meta(csv_accuracy_path)  # artifacts/accuracy.csv.meta.json
+
