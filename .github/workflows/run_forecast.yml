@@ -3,7 +3,7 @@ name: Run Electricity Forecast and Push Entire Project
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch:
 
 jobs:
