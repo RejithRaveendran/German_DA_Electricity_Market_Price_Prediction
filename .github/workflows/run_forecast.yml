@@ -26,7 +26,7 @@ jobs:
 
       - name: Run electricity forecast
         run: |
-          electricity_forecast_powerbi_updated.py
+          electricity_forecast_powerbi.py
 
       - name: Commit and push all changes
         run: |
